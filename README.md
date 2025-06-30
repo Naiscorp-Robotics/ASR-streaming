@@ -1,3 +1,0 @@
-# ASR-streaming
-
-Test

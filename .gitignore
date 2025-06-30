@@ -1,16 +1,13 @@
 kaldifeat_src
 pretrained_v1
-*log*
 datatest
 decode_offline
 lightspeech_src
 src
 WER_ALIGN_KALDI
 note.txt
-# config
 streaming_server_e2e
 # *_v2*
-__pycache__/
 logging_profiler
 temp_dir
 tmp
@@ -22,3 +19,90 @@ streaming_decoder/pretrained_v2/endpointing
 hanoi_voice
 test.py
 *pretrained_v2*
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+en_env/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+.env
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Audio files
+*.wav
+*.mp3
+*.flac
+*.aac
+*.ogg
+*.m4a
+
+# Log files
+*log*
+*.log
+logs/
+
+# Backup and temporary files
+*_backup*
+*_copy*
+*.bak
+*.tmp
+
+# Large installers and packages
+*.sh
+packages/
+*.whl
+*.deb
+*.rpm
+*.dmg
+*.pkg
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Compressed files
+*.zip
+*.tar.gz
+*.rar
+*.7z

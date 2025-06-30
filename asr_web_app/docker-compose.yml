@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  web:
+    build: .
+    network_mode: "host"
+    environment:
+      - NGROK_AUTHTOKEN=2hXX6Bv4Ufix0yn1YTfrbf4bqzB_83QuGdyFvE3ytw3jKJvRg
+    volumes:
+      - ./templates:/app/templates
+      - ./static:/app/static
+    restart: unless-stopped 

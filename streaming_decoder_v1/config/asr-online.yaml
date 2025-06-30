@@ -1,0 +1,126 @@
+model_dir:  /opt/server_e2e/streaming_decoder/pretrained_v2/AM
+corpus_dir: /opt/server_e2e/streaming_decoder/pretrained_v2/LM
+send_internal: True
+save_audio: False
+filter_noise: False
+noise_threashold: -40
+Acoustic_Model:
+  _target_: lightspeech.models.recognition.LightningASR
+  filepath: asr-online.ckpt
+  device: cpu
+
+Linguistic_Model:
+  GENERAL:
+    _target_: lightspeech.models.recognition.BeamSearchDecoder
+    lexicon: lexicon.txt
+    lm: 3gram.bin
+    lm_weight: 1.0
+    beam_size: 50
+    beam_size_token: 5
+    beam_threshold: 50.0
+    word_score: 0.5
+
+
+LM_Endpointing: /opt/server_e2e/streaming_decoder/pretrained_v2/endpointing/lm_general.arpa
+Endpointing_rules:
+  DEFAULT:
+    rule1.1:
+      must_contain_nonsilence: true
+      min_trailing_silence: 1
+      min_utterance_length: 0.0
+      max_relative_cost: .inf
+    rule1.2:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.9
+      min_utterance_length: 0.0
+      max_relative_cost: 8
+
+    rule1.3:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.8
+      min_utterance_length: 0.0
+      max_relative_cost: 5
+
+    rule1.4:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.7
+      min_utterance_length: 0.0
+      max_relative_cost: 2
+
+
+    rule2.1:
+      must_contain_nonsilence: true
+      min_trailing_silence: 1
+      min_utterance_length: 10.0
+      max_relative_cost: .inf
+    rule2.2:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.9
+      min_utterance_length: 10.0
+      max_relative_cost: 8
+
+    rule2.3:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.7
+      min_utterance_length: 10.0
+      max_relative_cost: 5
+
+    rule2.4:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.6
+      min_utterance_length: 10.0
+      max_relative_cost: 2
+
+    rule3.1:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.9
+      min_utterance_length: 20.0
+      max_relative_cost: .inf
+    rule3.2:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.8
+      min_utterance_length: 20.0
+      max_relative_cost: 8
+
+    rule3.3:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.7
+      min_utterance_length: 20.0
+      max_relative_cost: 5
+
+    rule3.4:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.6
+      min_utterance_length: 20.0
+      max_relative_cost: 2
+
+    rule4:
+      must_contain_nonsilence: true
+      min_trailing_silence: 0.0
+      min_utterance_length: 40.0
+      max_relative_cost: .inf
+
+Mapping_rule:
+  GENERAL: DEFAULT
+
+audio:
+  sample_rate: 16000
+  hop_length: 0.01
+  segment_size: 64
+  context_size: 16
+  bias: 4
+  framerate: 4
+
+Vad:
+  Webrtc:
+    aggressiveness: 2
+    chunk_duration: 0.03
+    min_segment_dur: 0.2
+  Silero:
+    model_path: pretrained_v2/vad/silero_vad_v5.onnx
+    force_onnx_cpu: False
+
+Speaker_Diar:
+  model_dir: /opt/server_e2e/streaming_decoder/pretrained_v2/diar/xvector # ecapa-tdnn
+  speaker_wav: speaker_16k.wav
+  threshold: 0.5

@@ -1,0 +1,13 @@
+Flask
+Flask-SocketIO
+websocket-client
+python-engineio
+python-socketio
+python-multipart
+eventlet
+ngrok-api
+requests
+aiortc
+numpy
+aiohttp
+av 

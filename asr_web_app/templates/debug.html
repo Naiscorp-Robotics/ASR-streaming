@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ASR Debug</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 20px;
+        }
+
+        .log-container {
+            height: 400px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-family: monospace;
+        }
+
+        .vi-debug {
+            color: #28a745;
+        }
+
+        .en-debug {
+            color: #007bff;
+        }
+
+        .error {
+            color: #dc3545;
+        }
+
+        .info {
+            color: #6c757d;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="text-center mb-4">ASR Debug Console</h1>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Server Configuration</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="server-info">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5>Debug Log</h5>
+                        <button id="clear-log" class="btn btn-sm btn-secondary">Clear Log</button>
+                    </div>
+                    <div class="card-body">
+                        <div id="log-container" class="log-container">
+                            <div id="log-output"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row mb-4">
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Audio Statistics</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="audio-stats">
+                            <p>Chunks Sent: <span id="chunks-sent">0</span></p>
+                            <p>Total Bytes: <span id="total-bytes">0</span></p>
+                            <p>Sample Rate: <span id="sample-rate">16000</span> Hz</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>Connection Status</h5>
+                    </div>
+                    <div class="card-body">
+                        <div id="connection-status">
+                            <p>Socket.IO: <span id="socketio-status" class="badge bg-secondary">Disconnected</span></p>
+                            <p>VI ASR: <span id="vi-status" class="badge bg-secondary">Unknown</span></p>
+                            <p>EN ASR: <span id="en-status" class="badge bg-secondary">Unknown</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center">
+            <a href="/" class="btn btn-primary">Return to Main App</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client@4.5.4/dist/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const logOutput = document.getElementById('log-output');
+            const clearLogBtn = document.getElementById('clear-log');
+            const serverInfo = document.getElementById('server-info');
+            const chunksSent = document.getElementById('chunks-sent');
+            const totalBytes = document.getElementById('total-bytes');
+            const sampleRate = document.getElementById('sample-rate');
+            const socketioStatus = document.getElementById('socketio-status');
+            const viStatus = document.getElementById('vi-status');
+            const enStatus = document.getElementById('en-status');
+
+            // Audio stats
+            let totalChunks = 0;
+            let bytes = 0;
+
+            // Get server configuration
+            fetch('/debug_info')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Server configuration:', data);
+
+                    // Display server info
+                    const serverInfoHtml = `
+                        <table class="table table-bordered">
+                            <tr>
+                                <th>Setting</th>
+                                <th>Value</th>
+                            </tr>
+                            <tr>
+                                <td>Buffer Size</td>
+                                <td>${data.buffer_size}</td>
+                            </tr>
+                            <tr>
+                                <td>Sample Rate</td>
+                                <td>${data.sample_rate} Hz</td>
+                            </tr>
+                            <tr>
+                                <td>Vietnamese ASR URL</td>
+                                <td>${data.vi_url}</td>
+                            </tr>
+                            <tr>
+                                <td>English ASR URL</td>
+                                <td>${data.en_url}</td>
+                            </tr>
+                            <tr>
+                                <td>Active Connections</td>
+                                <td>${data.active_connections}</td>
+                            </tr>
+                        </table>
+                    `;
+                    serverInfo.innerHTML = serverInfoHtml;
+
+                    // Update sample rate
+                    sampleRate.textContent = data.sample_rate;
+                })
+                .catch(err => {
+                    console.error('Error fetching debug info:', err);
+                    serverInfo.innerHTML = `<div class="alert alert-danger">Error fetching server info: ${err.message}</div>`;
+                });
+
+            // Connect to Socket.IO server
+            const socket = io();
+
+            socket.on('connect', () => {
+                addLogEntry('Socket.IO connected', 'info');
+                socketioStatus.textContent = 'Connected';
+                socketioStatus.className = 'badge bg-success';
+            });
+
+            socket.on('disconnect', () => {
+                addLogEntry('Socket.IO disconnected', 'error');
+                socketioStatus.textContent = 'Disconnected';
+                socketioStatus.className = 'badge bg-danger';
+
+                viStatus.textContent = 'Unknown';
+                viStatus.className = 'badge bg-secondary';
+
+                enStatus.textContent = 'Unknown';
+                enStatus.className = 'badge bg-secondary';
+            });
+
+            // Listen for debug messages
+            socket.on('debug', (data) => {
+                addLogEntry(`${data.category}: ${data.message}`, data.category);
+
+                // Update connection status
+                if (data.category === 'vi-open') {
+                    viStatus.textContent = 'Connected';
+                    viStatus.className = 'badge bg-success';
+                } else if (data.category === 'vi-close') {
+                    viStatus.textContent = 'Disconnected';
+                    viStatus.className = 'badge bg-danger';
+                } else if (data.category === 'en-open') {
+                    enStatus.textContent = 'Connected';
+                    enStatus.className = 'badge bg-success';
+                } else if (data.category === 'en-close') {
+                    enStatus.textContent = 'Disconnected';
+                    enStatus.className = 'badge bg-danger';
+                }
+
+                // Update audio stats
+                if (data.category === 'audio') {
+                    if (data.chunks && data.bytes) {
+                        totalChunks = data.chunks;
+                        bytes = data.bytes;
+
+                        chunksSent.textContent = totalChunks;
+                        totalBytes.textContent = formatBytes(bytes);
+                    }
+                }
+            });
+
+            // Add log entry
+            function addLogEntry(message, category) {
+                const timestamp = new Date().toLocaleTimeString();
+                const entry = document.createElement('div');
+                entry.className = category || 'info';
+                entry.textContent = `[${timestamp}] ${message}`;
+
+                logOutput.appendChild(entry);
+
+                // Auto-scroll to bottom
+                const logContainer = document.getElementById('log-container');
+                logContainer.scrollTop = logContainer.scrollHeight;
+            }
+
+            // Format bytes to human-readable format
+            function formatBytes(bytes, decimals = 2) {
+                if (bytes === 0) return '0 Bytes';
+
+                const k = 1024;
+                const dm = decimals < 0 ? 0 : decimals;
+                const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
+
+                const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+                return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+            }
+
+            // Clear log
+            clearLogBtn.addEventListener('click', () => {
+                logOutput.innerHTML = '';
+                addLogEntry('Log cleared', 'info');
+            });
+
+            // Add initial log entry
+            addLogEntry('Debug console started', 'info');
+        });
+    </script>
+</body>
+
+</html>

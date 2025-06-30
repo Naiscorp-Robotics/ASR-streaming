@@ -1,0 +1,24 @@
+kaldifeat_src
+pretrained_v1
+*log*
+datatest
+decode_offline
+lightspeech_src
+src
+WER_ALIGN_KALDI
+note.txt
+# config
+streaming_server_e2e
+# *_v2*
+__pycache__/
+logging_profiler
+temp_dir
+tmp
+lightspeech_v1
+Read_Number_Py
+streaming_decoder/logs
+exp/
+streaming_decoder/pretrained_v2/endpointing
+hanoi_voice
+test.py
+*pretrained_v2*

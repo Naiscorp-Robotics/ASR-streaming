@@ -1,0 +1,63 @@
+services:
+  # Vietnamese ASR
+  streaming-asr-vi:
+    image: streaming_e2e:v.1.0.0
+    # image: nvcr.io/nvidia/l4t-base:r32.4.3
+    container_name: streaming-asr-vi
+    build:
+      context: .
+      dockerfile: Dockerfile
+    #ports:
+    # - "${WORKER_PORT}:${WORKER_PORT}"
+    restart: "always"
+    network_mode: host
+    volumes:
+      - ./streaming_decoder:/opt/server_e2e/streaming_decoder
+    # entrypoint: tail -F anything 
+    env_file:
+      - ./.env
+    environment:
+      - PORT=${WORKER_PORT}
+      - LANGUAGE=${LANGUAGE}
+      - TORCH_THREAD=2
+    deploy:
+      resources:
+        limits:
+          cpus: '12'
+          memory: 2000M
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    command: bash -c "cd /opt/server_e2e/streaming_decoder && bash run_server.sh"
+  # English ASR
+  streaming-asr-en:
+    image: streaming_e2e:v.1.0.0
+    container_name: streaming-asr-en
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: "on-failure"
+    network_mode: host
+    volumes:
+      - ./streaming_decoder:/opt/server_e2e/streaming_decoder
+    env_file:
+      - ./en_env/.env
+    environment:
+      - PORT=${WORKER_PORT}
+      - LANGUAGE=${LANGUAGE_EN}
+      - TORCH_THREAD=2
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:512
+      - CUDA_VISIBLE_DEVICES=0
+    deploy:
+      resources:
+        limits:
+          cpus: '12'
+          memory: 4000M
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    command: bash -c "cd /opt/server_e2e/streaming_decoder && export LANGUAGE=en && bash run_server.sh"

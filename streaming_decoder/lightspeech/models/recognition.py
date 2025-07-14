@@ -58,6 +58,9 @@ def greedy_search(
 
 
 def pack_input(states: List):
+    """
+    (Batch, Layer, 4, X, 1, ..) -> (Layer, 4, X, Batch,..)
+    """
     state = []
     batch_size = len(states)
     for layer in range(20):

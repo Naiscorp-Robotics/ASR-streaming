@@ -116,6 +116,7 @@ class StreamingAcousticEncoder(nn.Module):
             tanh_on_mem=tanh_on_mem,
         )
 
+    @torch.jit.unused
     def forward(
         self,
         xs: torch.Tensor,
@@ -131,6 +132,7 @@ class StreamingAcousticEncoder(nn.Module):
 
         return xs, x_lens
 
+    @torch.jit.export    
     def infer(
         self,
         xs: torch.Tensor,

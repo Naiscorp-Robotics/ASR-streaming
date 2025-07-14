@@ -9,8 +9,8 @@ import torchaudio
 def extract_filterbank(
     waveform: torch.Tensor,
     sample_rate: int,
-    device: "cpu",
-) -> torch.Tensor:
+    device: str = "cpu",
+) -> Tuple[torch.Tensor, torch.Tensor]:
 
     transformation = torchaudio.transforms.MelSpectrogram(
         sample_rate=sample_rate,
@@ -24,9 +24,10 @@ def extract_filterbank(
     filterbank = transformation(waveform)
     filterbank = filterbank.clamp(1e-5).log()
     filterbank = torch.transpose(filterbank, 2, 1)
-    lens = [x.size(0) for x in filterbank]
-    lens = torch.tensor(lens, device=device)
-
+    # lens = [x.size(0) for x in filterbank]
+    # lens = torch.tensor(lens, device=device)
+    B, T =  filterbank.shape[:2]
+    lens = torch.full((B,), T, device=device)
     return filterbank, lens
 
 
